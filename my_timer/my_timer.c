@@ -1,86 +1,93 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/proc_fs.h>
-#include <linux/uaccess.h>
 #include <linux/time.h>
+#include <linux/uaccess.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("COP4610");
-MODULE_DESCRIPTION("Timer kernel module that tracks elapsed time via /proc/timer");
+MODULE_DESCRIPTION(
+    "Timer kernel module that tracks elapsed time via /proc/timer");
 
 #define PROC_NAME "timer"
 #define BUF_SIZE 256
 
+//Global variables for storing the proc entry pointer and timing states 
 static struct proc_dir_entry *proc_entry;
 static struct timespec64 last_time;
-static int has_been_read = 0;  /* flag: 1 after the first read */
+static int has_been_read = 0; // flag: 1 after the time is first read
 
+//This function calculates the current time and the elapsed time since the last read.
 static ssize_t timer_proc_read(struct file *file, char __user *ubuf,
-                               size_t count, loff_t *ppos)
-{
-    struct timespec64 now;
-    char buf[BUF_SIZE];
-    int len = 0;
+                               size_t count, loff_t *ppos) {
+  struct timespec64 now;
+  char buf[BUF_SIZE];
+  int len = 0;
 
-    if (*ppos > 0)
-        return 0;
+  //Used to ensure that we only provide the output once per read session 
+  if (*ppos > 0)
+    return 0;
 
-    ktime_get_real_ts64(&now);
+  // Used to get the current time
+  ktime_get_real_ts64(&now);
 
-    len += snprintf(buf + len, BUF_SIZE - len,
-                    "current time: %lld.%09ld\n",
-                    (long long)now.tv_sec, now.tv_nsec);
+  len += snprintf(buf + len, BUF_SIZE - len, "current time: %lld.%09ld\n",
+                  (long long)now.tv_sec, now.tv_nsec);
 
-    if (has_been_read) {
-        long long elapsed_sec;
-        long elapsed_nsec;
+  // If this isn't the first time the file is read, calculate the elapsed time
+  if (has_been_read) {
+    long long elapsed_sec;
+    long elapsed_nsec;
 
-        elapsed_sec  = now.tv_sec  - last_time.tv_sec;
-        elapsed_nsec = now.tv_nsec - last_time.tv_nsec;
+    elapsed_sec = now.tv_sec - last_time.tv_sec;
+    elapsed_nsec = now.tv_nsec - last_time.tv_nsec;
 
-        if (elapsed_nsec < 0) {
-            elapsed_sec  -= 1;
-            elapsed_nsec += 1000000000L;
-        }
-
-        len += snprintf(buf + len, BUF_SIZE - len,
-                        "elapsed time: %lld.%09ld\n",
-                        elapsed_sec, elapsed_nsec);
+    if (elapsed_nsec < 0) {
+      elapsed_sec -= 1;
+      elapsed_nsec += 1000000000L;
     }
 
-    last_time = now;
-    has_been_read = 1;
+    len += snprintf(buf + len, BUF_SIZE - len, "elapsed time: %lld.%09ld\n",
+                    elapsed_sec, elapsed_nsec);
+  }
 
-    if (copy_to_user(ubuf, buf, len))
-        return -EFAULT;
+  // updates the lasttime variable for the next read operation 
+  last_time = now;
+  has_been_read = 1;
 
-    *ppos = len;
-    return len;
+  // Copy the formatted buffer string to the userspace output buffer 
+  if (copy_to_user(ubuf, buf, len))
+    return -EFAULT;
+
+  *ppos = len;
+  return len;
 }
 
+//Define the file operations for the proc entry 
 static const struct proc_ops timer_proc_ops = {
     .proc_read = timer_proc_read,
 };
 
-static int __init timer_init(void)
-{
-    proc_entry = proc_create(PROC_NAME, 0644, NULL, &timer_proc_ops);
-    if (!proc_entry) {
-        printk(KERN_ERR "my_timer: failed to create /proc/%s\n", PROC_NAME);
-        return -ENOMEM;
-    }
+//timer_init is the module entry point. Creates the /proc entry.
+static int __init timer_init(void) {
+  proc_entry = proc_create(PROC_NAME, 0644, NULL, &timer_proc_ops);
+  if (!proc_entry) {
+    printk(KERN_ERR "my_timer: failed to create /proc/%s\n", PROC_NAME);
+    return -ENOMEM;
+  }
 
-    ktime_get_real_ts64(&last_time);
-    has_been_read = 0;
+  // Initialize last_time to the load time for the very first read calculation
+  ktime_get_real_ts64(&last_time);
+  has_been_read = 0;
 
-    printk(KERN_INFO "my_timer: module loaded, /proc/%s created\n", PROC_NAME);
-    return 0;
+  printk(KERN_INFO "my_timer: module loaded, /proc/%s created\n", PROC_NAME);
+  return 0;
 }
 
-static void __exit timer_exit(void)
-{
-    proc_remove(proc_entry);
-    printk(KERN_INFO "my_timer: module unloaded, /proc/%s removed\n", PROC_NAME);
+// timer_exit is the module exit point. Removes the /proc entry.
+static void __exit timer_exit(void) {
+  proc_remove(proc_entry);
+  printk(KERN_INFO "my_timer: module unloaded, /proc/%s removed\n", PROC_NAME);
 }
 
 module_init(timer_init);
