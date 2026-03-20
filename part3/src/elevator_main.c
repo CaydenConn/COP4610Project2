@@ -112,13 +112,52 @@ static int __init elevator_init_module(void){
 
 // module cleanup
 static void __exit elevator_exit_module(void){
-  STUB_start_elevator = NULL;
-  STUB_issue_request = NULL;
-  STUB_stop_elevator = NULL;
+  struct list_head *curr, *next;
+  struct passenger *p;
   
   // stops elevator thread if it is still running
   if(elevator_thread){
     kthread_stop(elevator_thread);
+  }
+  
+  STUB_start_elevator = NULL;
+  STUB_issue_request = NULL;
+  STUB_stop_elevator = NULL;
+
+  // free elevator passengers
+  mutex_lock(&elevator.lock);
+
+  // sets curr to be the first element of the list
+  curr = elevator.passengers.next;
+
+  // checks to see if curr != head of the list, if it does it means the entire list has been freed
+  while(curr != &elevator.passengers){
+    next = curr->next;
+    p = list_entry(curr, struct passenger, list);
+    list_del(curr);
+    kfree(p);
+    curr = next;
+  }
+
+  mutex_unlock(&elevator.lock);
+
+  // free floor passengers
+  for(int i = 0; i < NUM_FLOORS; i++){
+    mutex_lock(&floors[i].lock);
+    
+    // sets curr to be the first element of the list
+    curr = floors[i].passengers.next;
+    
+    // checks to see if curr != head of the list, if it does it means the entire list has been freed
+    while(curr != &floors[i].passengers){
+      next = curr->next;
+      p = list_entry(curr, struct passenger, list);
+      list_del(curr);
+      kfree(p);
+      curr = next;
+    }
+
+    mutex_unlock(&floors[i].lock);
   }
 }
 
