@@ -1,3 +1,6 @@
+//Added to ~test-kernel-work/syscalls/sycalls.c
+
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/syscalls.h>
