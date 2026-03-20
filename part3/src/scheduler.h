@@ -63,4 +63,8 @@ int load_passengers(void);
 void update_direction(void);
 bool check_if_should_stop(void);
 
+int start_elevator(void);
+int issue_request(int start, int dest, int type);
+int stop_elevator(void);
+
 #endif
