@@ -53,10 +53,11 @@ static int elevator_thread_run_fn(void *data){
   
     mutex_lock(&elevator.lock);
 
-    // if elevator is offline, unlock and exit thread
+    // if elevator is offline, just idle until rmmod calls kthread_stop
     if (elevator.state == OFFLINE) {
       mutex_unlock(&elevator.lock);
-      break;
+      msleep_interruptible(100);
+      continue;
     }
 
     if(check_if_should_stop()) {
