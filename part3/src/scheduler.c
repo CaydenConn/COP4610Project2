@@ -12,6 +12,7 @@ int unload_passengers(void) {
     if (p->dest_floor == elevator.current_floor) {
       elevator.current_load -= p->weight;
       elevator.num_passengers--;
+      elevator.passengers_serviced++;
       list_del(&p->list);
       kfree(p);
       unloaded++;
