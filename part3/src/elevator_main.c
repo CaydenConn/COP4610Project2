@@ -84,14 +84,14 @@ static int elevator_thread_run_fn(void *data){
     
     // elevator waits for 1 second if passengers are loading/unloading
     if(did_load){
-      msleep(1000);
+      msleep_interruptible(1000);
     }
     // elevator waits for 2 seconds if it moved floors
     if(did_move){
-      msleep(2000);
+      msleep_interruptible(2000);
     }
     if (!did_load && !did_move){
-      msleep(100);
+      msleep_interruptible(100);
     }
   }
 
