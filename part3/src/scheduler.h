@@ -40,6 +40,7 @@ struct elevator_info {
   int current_floor;           // 1-based current floor
   int current_load;            // total weight in elevator
   int num_passengers;          // number of passengers in elevator
+  int passengers_serviced;     // total passengers delivered
   int deactivating;            // Set to if stop_elevator() is called
   struct list_head passengers; // list of passengers struct
   struct mutex lock;
@@ -66,5 +67,8 @@ bool check_if_should_stop(void);
 int start_elevator(void);
 int issue_request(int start, int dest, int type);
 int stop_elevator(void);
+
+int elevator_proc_init(void);
+void elevator_proc_exit(void);
 
 #endif

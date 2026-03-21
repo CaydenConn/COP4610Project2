@@ -29,6 +29,7 @@ void init_elevator(void) {
   elevator.current_floor = 1;
   elevator.current_load = 0;
   elevator.num_passengers = 0;
+  elevator.passengers_serviced = 0;
   elevator.deactivating = 0;
   INIT_LIST_HEAD(&elevator.passengers);
   mutex_init(&elevator.lock);
@@ -97,10 +98,16 @@ static int elevator_thread_run_fn(void *data){
   return 0;
 }
 
-// module initislization
+// module initialization
 static int __init elevator_init_module(void){
+  int ret;
+
   init_elevator();
   init_floors();
+
+  ret = elevator_proc_init();
+  if (ret)
+    return ret;
 
   // syscalls are set to the syscalls implemented in this file
   STUB_start_elevator = start_elevator;
@@ -114,7 +121,8 @@ static int __init elevator_init_module(void){
 static void __exit elevator_exit_module(void){
   struct list_head *curr, *next;
   struct passenger *p;
-  
+  int i;
+
   // stops elevator thread if it is still running
   if(elevator_thread){
     kthread_stop(elevator_thread);
@@ -123,6 +131,9 @@ static void __exit elevator_exit_module(void){
   STUB_start_elevator = NULL;
   STUB_issue_request = NULL;
   STUB_stop_elevator = NULL;
+
+  // remove /proc/elevator entry
+  elevator_proc_exit();
 
   // free elevator passengers
   mutex_lock(&elevator.lock);
@@ -142,7 +153,7 @@ static void __exit elevator_exit_module(void){
   mutex_unlock(&elevator.lock);
 
   // free floor passengers
-  for(int i = 0; i < NUM_FLOORS; i++){
+  for(i = 0; i < NUM_FLOORS; i++){
     mutex_lock(&floors[i].lock);
     
     // sets curr to be the first element of the list
@@ -176,6 +187,7 @@ int start_elevator(void){
   elevator.current_floor = 1;
   elevator.current_load = 0;
   elevator.num_passengers = 0;
+  elevator.passengers_serviced = 0;
   elevator.deactivating = 0;
 
   mutex_unlock(&elevator.lock);
