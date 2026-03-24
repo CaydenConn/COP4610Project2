@@ -1,5 +1,9 @@
+obj-m += my_timer.o
+
+KDIR ?= /lib/modules/$(shell uname -r)/build
+
 all:
-	$(MAKE) -C src
+	make -C $(KDIR) M=$(PWD)/src modules
 
 clean:
-	$(MAKE) -C src clean
+	make -C $(KDIR) M=$(PWD)/src clean
