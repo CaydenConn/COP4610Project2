@@ -19,7 +19,7 @@ This project focuses on kernel-level programming, concurrency, and system calls 
 ## Getting Started
 1. Ensure you are running the custom compiled `linux-kernel-6.16.x` with the custom system calls installed (Syscalls 548, 549, and 550).
 2. Execute `make` in the root directory to compile the trace programs and both kernel modules.
-3. **Part 1 (Tracing):** Run `strace -o part1.trace ./part1/part1`
+3. **Part 1 (Tracing):** The Makefile compiles (and cleans) the executables and the .trace files
 4. **Part 2 (Timer):** Insert the module using `sudo insmod part2/my_timer.ko`. View the time by running `cat /proc/timer`. Remove with `sudo rmmod my_timer`.
 5. **Part 3 (Elevator):** Insert the module using `sudo insmod part3/src/elevator.ko`. Use the provided `producer` and `consumer` executables in the `tests/` directory to issue requests and start/stop the elevator. Monitor the state using `watch -n 1 cat /proc/elevator`.
 
