@@ -20,7 +20,7 @@ This project focuses on kernel-level programming, concurrency, and system calls 
 1. Ensure you are running the custom compiled `linux-kernel-6.16.x` with the custom system calls installed (Syscalls 548, 549, and 550).
 2. Execute `make` in the root directory to compile the trace programs and both kernel modules.
 3. **Part 1 (Tracing):** Run `strace -o part1.trace ./part1/part1`
-4. **Part 2 (Timer):** Insert the module using `sudo insmod part2/src/my_timer.ko`. View the time by running `cat /proc/timer`. Remove with `sudo rmmod my_timer`.
+4. **Part 2 (Timer):** Insert the module using `sudo insmod part2/my_timer.ko`. View the time by running `cat /proc/timer`. Remove with `sudo rmmod my_timer`.
 5. **Part 3 (Elevator):** Insert the module using `sudo insmod part3/src/elevator.ko`. Use the provided `producer` and `consumer` executables in the `tests/` directory to issue requests and start/stop the elevator. Monitor the state using `watch -n 1 cat /proc/elevator`.
 
 ## Supported Features / Components
@@ -48,9 +48,12 @@ This project focuses on kernel-level programming, concurrency, and system calls 
   * `part1.c`: C program executing exactly 5 system calls.
   * `part1.trace`: Trace output verifying the 5 added calls.
   * `Makefile`: Compiles the Part 1 executables.
+* **`part2/`**
+  * `Makefile`: Compiles the timer kernel module into `my_timer.ko`.
 * **`part2/src/`**
   * `my_timer.c`: Source code for the timer kernel module.
-  * `Makefile`: Compiles the timer kernel module into `my_timer.ko`.
+* **`part3/`**
+  * `Makefile`: Compiles the elevator kernel module into `elevator.ko`.
 * **`part3/src/`**
   * `elevator_main.c`: Core module initialization, exit, and system call implementations.
   * `elevator_proc.c`: Logic for generating the `/proc/elevator` output.
@@ -64,7 +67,9 @@ This project focuses on kernel-level programming, concurrency, and system calls 
 
 ## Division of Labor
 
-**Cayden Conn** * Part 1: System Call Tracing
+**Cayden Conn** 
+* Part 1: System Call Tracing
+* Part 3a: Adding System Calls
 * Part 3d: Linked List Implementation
 * Part 3e: Mutexes and Concurrency Safety
 
@@ -72,9 +77,10 @@ This project focuses on kernel-level programming, concurrency, and system calls 
 |------------|-----------------------------------------------------------------------------|
 | 2026-03-12 | Completed Part 1 tracing and generated .trace files.                        |
 | 2026-03-16 | Setup `list_head` structures and memory allocation for passengers.          |
-| 2026-03-18 | Integrated mutex locks to protect floor queues and the elevator state.      |
+| 2026-03-18 | Implemented system calls and integrated mutex locks for protection.         |
 
-**Chase Blancher** * Part 2: Timer Kernel Module
+**Chase Blancher** 
+* Part 2: Timer Kernel Module
 * Part 3f: Elevator Scheduling Algorithm
 
 | Date       | Work Completed / Notes                                                      |
@@ -83,7 +89,8 @@ This project focuses on kernel-level programming, concurrency, and system calls 
 | 2026-03-19 | Drafted the core scanning and passenger loading algorithm.                  |
 | 2026-03-20 | Finalized `update_direction` and `check_if_should_stop` scheduling logic.   |
 
-**Giovanni Giannone** * Part 3a: Adding System Calls
+**Giovanni Giannone** 
+* Part 3a: Adding System Calls
 * Part 3b: Kernel Compilation
 * Part 3c: Kthreads (Kernel Threads)
 
